@@ -235,6 +235,8 @@ module.exports = function(RED) {
       }
 
       var on = 0;
+      var dim = -1;
+
       if (typeof msg.payload === 'string') {
         if (msg.payload == 'on' || msg.payload == '1' || msg.payload == 'true') {
           on = 1;
@@ -249,12 +251,15 @@ module.exports = function(RED) {
         //object need to get complicated here
         if (msg.payload.state && typeof msg.payload.state === 'number') {
           if (dev.type === 'socket') {
-            if (msg.payload >= 0 && msg.payload < 2) {
-              on = msg.payload.state
+            if (msg.payload.state >= 0 && msg.payload.state < 2) {
+                on = msg.payload.state
             }
           } else if (dev.type === 'light' || dev.type === 'group') {
-            if (msg.payload >= 0 && msg.payload < 3) {
-              on = msg.payload.state;
+            if (msg.payload.state >= 0 && msg.payload.state < 3) {
+                on = msg.payload.state;
+            }
+            if(msg.payload.hasOwnProperty("dim")) {
+                dim = msg.payload.dim;
             }
           }
         }
@@ -267,8 +272,11 @@ module.exports = function(RED) {
       if (dev.type === 'socket') {
         //console.log("socket");
         wemo.toggleSocket(dev, on);
-      } else if (dev.type === 'light`') {
+      } else if (dev.type === 'light') {
         //console.log("light");
+        if(dim > -1) {
+            wemo.setStatus(dev,"10008", dim + ":10");
+        }
         wemo.setStatus(dev,"10006", on);
       } else {
         console.log("group");
